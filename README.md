@@ -74,9 +74,11 @@ RMS_bi = sqrt((sum(d_MR^2) + sum(d_RM^2)) / (N_M + N_R))
 | Maximo NN direcionado M->R | 2,041977 |
 | Cobertura M->R <= 0,385317 | 91,04% |
 
-A regiao candidata a alteracao e uma heuristica diferente da mascara estavel: sao os 8.489 vertices moveis cujo residuo final `M->R` e estritamente maior que P90 (`0,281503`). Ela nao e espacialmente contigua por construcao, nem uma segmentacao anatomica.
+A regiao candidata a alteracao e uma heuristica diferente da mascara estavel: sao os 10% maiores residuos finais `M->R` (estritamente acima de P90). Ela nao e espacialmente contigua por construcao, nao e uma regiao anatomica comprovada e nao e uma segmentacao clinica. O JSON salva media, mediana, RMS, P95, P99, maximo e desvio padrao dessa regiao e da regiao heuristica usada no registro, para comparacao de residuo geometrico observado.
 
-O mapa em `resultados/mapa_distancia.png` usa exatamente o mesmo vetor final de residuos `M->R` usado pelas metricas, com colorbar em unidade nativa. `mapa_distancia_vertices.ply` guarda essa mesma cor por vertice.
+O limiar de cobertura e um parametro explicito do experimento: `8 * spacing_estimate_native`, em que `spacing_estimate_native` e a mediana da distancia ao segundo vizinho mais proximo em uma amostra da referencia. Ele serve somente para `count(d <= threshold) / N`; nao remove pontos de RMS, mediana, percentis ou maximo e nao e uma medida universal de qualidade ou clínica.
+
+O mapa em `resultados/mapa_distancia.png` e um mapa point-wise de distancia NN: usa exatamente o mesmo vetor final de residuos `M->R` usado pelas metricas, com colorbar em unidade nativa. Nao e mapa de superficie continua, triangular ou ponto-superficie. O PLY `mapa_distancia_vertices.ply` guarda essa mesma cor por vertice e `regiao_candidata.png` destaca a heuristica P90.
 
 ## Rastreabilidade da execucao
 
@@ -86,9 +88,11 @@ O terminal, `relatorio.txt`, `metrics.json`, a transformacao e as imagens sao al
 
 ## Variabilidade e limitacoes
 
-A variabilidade e estimada por seis bootstraps deterministas de 75% dos pontos. Na ultima rodada, RMS medio `0,348103` e desvio `0,000012`, ambos em unidade nativa. Isso descreve estabilidade numerica do pipeline, nao incerteza clinica.
+A variabilidade e estimada por seis repeticoes deterministas, usando subconjuntos independentes de 75% dos pontos de cada nuvem. O JSON salva o RMS de cada repeticao, media, desvio padrao, fração usada e ruido aplicado (zero neste teste). Isso descreve variabilidade do RMS sob perturbacoes, nao intervalo de confiança, incerteza metrológica ou incerteza clínica.
 
-O metodo pode degradar com sobreposicao pequena, grande mudanca geometrica ou mascara de consenso que inclua uma area alterada. Como os dados nao possuem faces nem unidade fisica declarada, nao e apropriado interpretar os valores como distancia de superficie ou milimetros sem informacao externa.
+A robustez é auditada separando: (A) ruido gaussiano com sigma de 0,5 spacing; (B) ausencia espacial dos 25% e dos 50% superiores em Z; e (C) uma perturbação de inicialização de 8 graus e translação. Os testes usam cópias/subconjuntos e não alteram os PLYs. Um caso é marcado como potencialmente não confiável se a cobertura cair pelo menos 20 pontos percentuais em relação ao resultado original ou se o RMS atingir pelo menos duas vezes o RMS original. O critério e todas as métricas ficam em `metrics.json`.
+
+O método pode degradar com sobreposição pequena, grande mudança geométrica ou máscara de consenso que inclua uma área alterada. Como os dados não possuem faces nem unidade física declarada, não é apropriado interpretar os valores como distância de superfície ou milímetros sem informação externa. A comparação entre regiões é uma diferença geométrica observada/residual geométrico, não uma alteração clínica.
 
 ## Execucao
 

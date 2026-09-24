@@ -20,5 +20,5 @@ Cobertura <= 0.385317 unidade nativa: 91.04%
 Regiao estavel: 55176 pontos (65%), heuristica apos PCA e usada pelo ICP.
 Regiao candidata a alteracao: 8489 pontos acima de P90 (0.281503); heuristica nao anatomica.
 
-Variabilidade RMS (bootstrap): media 0.348103; sd 0.000012.
-Tempo total: 27.501 s
+    Variabilidade do RMS sob perturbacoes (subconjuntos): media 0.348100; sd 0.000010.
+Tempo total: 88.829 s

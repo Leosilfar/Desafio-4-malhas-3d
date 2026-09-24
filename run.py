@@ -21,7 +21,10 @@ from src.io_utils import load_ply, write_ply
 from src.metrics import bidirectional_metrics, directional_metrics, subset_metrics
 from src.preprocess import estimate_spacing
 from src.registration import apply
-from src.visualization import distance_map, overlay
+from src.visualization import candidate_region_map, distance_map, overlay
+
+
+COVERAGE_SPACING_MULTIPLIER = 8.0
 
 
 def rounded(value):
@@ -47,7 +50,7 @@ def main() -> None:
     output = ROOT / "resultados"
     output.mkdir(exist_ok=True)
     for name in (
-        "antes.png", "depois.png", "mapa_distancia.png", "malha2_alinhada.ply",
+        "antes.png", "depois.png", "mapa_distancia.png", "regiao_candidata.png", "malha2_alinhada.ply",
         "mapa_distancia_vertices.ply", "metricas.json", "metrics.json", "relatorio.txt",
         "transformacao_final.json",
     ):
@@ -71,7 +74,7 @@ def main() -> None:
     unit_note = "unidade nativa do PLY; unidade fisica nao declarada"
     final_transform, registration_info, stable_mask = register(reference.points, moving.points, reference.normals, spacing)
     aligned = moving.transformed(final_transform)
-    coverage_threshold = spacing * 8
+    coverage_threshold = spacing * COVERAGE_SPACING_MULTIPLIER
     before_m2r_distances, before_m2r = directional_metrics(moving.points, reference.points, coverage_threshold, "moving -> reference")
     before_r2m_distances, before_r2m = directional_metrics(reference.points, moving.points, coverage_threshold, "reference -> moving")
     after_m2r_distances, after_m2r = directional_metrics(aligned.points, reference.points, coverage_threshold, "moving -> reference")
@@ -86,20 +89,36 @@ def main() -> None:
     )
     candidate_metrics.update({
         "percentile": 0.90, "threshold_native": candidate_threshold,
-        "approximately_percent_of_moving_points": float(100 * candidate_mask.mean()),
+        "percent_of_moving_points": float(100 * candidate_mask.mean()),
         "spatially_contiguous": False,
+        "interpretation": "heuristic candidate discrepancy region: 10% largest post-registration residuals; not anatomical or clinical",
     })
+    stable_final_metrics = subset_metrics(
+        after_m2r_distances[stable_mask],
+        "moving points selected as the heuristic stable registration region, measured with final moving -> reference residuals",
+    )
+    stable_region = {
+        **registration_info["stable_region"],
+        "source": "moving points",
+        "selection_stage": "after coarse PCA, before ICP",
+        "used_for_icp": True,
+        "heuristic": "nearest-neighbor residual consensus; not anatomical or clinical",
+        "selected_percent_of_moving_points": float(100 * stable_mask.mean()),
+        "selection_rule": "65% smallest coarse-PCA moving -> reference NN residuals (inclusive quantile threshold)",
+        "final_residual_metrics": stable_final_metrics,
+    }
 
     visualization_started = time.perf_counter()
     overlay(reference.points, moving.points, output / "antes.png", "Antes do alinhamento")
     overlay(reference.points, aligned.points, output / "depois.png", "Depois do alinhamento")
     color_clip = float(np.quantile(after_m2r_distances, .95))
     colors = distance_map(aligned.points, after_m2r_distances, output / "mapa_distancia.png", color_clip)
+    candidate_region_map(aligned.points, candidate_mask, output / "regiao_candidata.png")
     visualization_seconds = time.perf_counter() - visualization_started
     write_ply(output / "malha2_alinhada.ply", aligned)
     write_ply(output / "mapa_distancia_vertices.ply", aligned, colors)
 
-    uncertainty_info = uncertainty(reference.points, moving.points, reference.normals, spacing)
+    variability_info = uncertainty(reference.points, moving.points, reference.normals, spacing)
     robustness_info = robustness(reference.points, moving.points, reference.normals, spacing, final_transform)
     timings = {
         "loading_seconds": loading_seconds, "preprocessing_seconds": preprocessing_seconds,
@@ -119,17 +138,37 @@ def main() -> None:
         "unit": {"reporting_unit": "native PLY unit", "physical_unit_status": "not declared by input PLY"},
         "data_interpretation": "point clouds; no faces present in either PLY",
         "spacing_estimate_native": spacing, "inspection": {"reference": reference_info, "moving": moving_info},
-        "coverage_threshold_native": coverage_threshold,
+        "coverage": {
+            "name": "coverage within threshold",
+            "formula": "count(d <= threshold) / N",
+            "coverage_threshold_native": coverage_threshold,
+            "threshold_used_for_coloring": False,
+            "threshold_definition": f"{COVERAGE_SPACING_MULTIPLIER:g} times the estimated median nearest-neighbor spacing of the reference cloud",
+            "threshold_parameter": {"reference": "spacing_estimate_native", "multiplier": COVERAGE_SPACING_MULTIPLIER},
+            "interpretation": "point-cloud coverage metric only; not a universal registration-quality or clinical measure",
+        },
         "before": {"moving_to_reference": before_m2r, "reference_to_moving": before_r2m, "bidirectional": before_bidirectional},
         "after": {"moving_to_reference": after_m2r, "reference_to_moving": after_r2m, "bidirectional": after_bidirectional},
-        "stable_region": {**registration_info["stable_region"], "source": "moving points", "selection_stage": "after coarse PCA, before ICP", "used_for_icp": True, "heuristic": "nearest-neighbor residual consensus; not anatomical or clinical"},
+        "stable_region": stable_region,
         "candidate_discrepancy_region": candidate_metrics,
+        "distance_map": {
+            "name": "point-wise NN distance map",
+            "direction": "moving -> reference",
+            "points": int(len(aligned.points)),
+            "formula": "d_i = min_j ||p_i - q_j||_2",
+            "unit": "native PLY unit",
+            "colormap": "turbo",
+            "normalization": "vmin=0; vmax=P95 of final moving -> reference distances; values above P95 are clipped for display only",
+            "threshold_native": coverage_threshold,
+            "source": "same unfiltered final moving -> reference residual vector used by after metrics",
+        },
         "icp": {"method": "multi-scale point-to-plane ICP", "robust_kernel": "Cauchy", "stable_mask_used": True, "stages": registration_info["icp_stages"]},
-        "registration": registration_info, "uncertainty": uncertainty_info, "robustness": robustness_info, "timings": timings,
+        "registration": registration_info, "variability": variability_info, "robustness": robustness_info, "timings": timings,
     }
+    transform_payload["application"] = "aligned_moving = apply(moving, T), equivalent to p_reference = T @ p_moving for column vectors"
     (output / "transformacao_final.json").write_text(json.dumps(rounded(transform_payload), indent=2), encoding="utf-8")
     (output / "metrics.json").write_text(json.dumps(rounded(metrics), indent=2), encoding="utf-8")
-    report = f"""HACKATHON ALLIAGE - DESAFIO 04\nREGISTRO RIGIDO DE CAPTURAS 3D\n\nReferencia: {reference_path.name}\nMovel: {moving_path.name}\nUnidade: {unit_note}\n\nDados: nuvens de pontos PLY sem faces. Todas as estatisticas direcionais usam NN Euclidiano e todos os pontos da fonte.\n\nRMS antes (M->R): {before_m2r['rms_native']:.6f}\nRMS depois (M->R): {after_m2r['rms_native']:.6f}\nRMS depois (R->M): {after_r2m['rms_native']:.6f}\nRMS bidirecional depois: {after_bidirectional['rms_bidirectional_native']:.6f}\nMediana depois (M->R): {after_m2r['median_native']:.6f}\nP95 depois (M->R): {after_m2r['p95_native']:.6f}\nP99 depois (M->R): {after_m2r['p99_native']:.6f}\nMaximo NN direcionado depois (M->R): {after_m2r['maximum_directed_nearest_neighbor_distance_native']:.6f}\nCobertura <= {coverage_threshold:.6f} unidade nativa: {after_m2r['coverage_within_threshold_percent']:.2f}%\n\nRegiao estavel: {registration_info['stable_region']['selected_points']} pontos ({registration_info['stable_region']['fraction']:.0%}), heuristica apos PCA e usada pelo ICP.\nRegiao candidata a alteracao: {candidate_metrics['points_evaluated']} pontos acima de P90 ({candidate_threshold:.6f}); heuristica nao anatomica.\n\nVariabilidade RMS (bootstrap): media {uncertainty_info['rms_mean_native']:.6f}; sd {uncertainty_info['rms_std_native']:.6f}.\nTempo total: {timings['total_seconds']:.3f} s\n"""
+    report = f"""HACKATHON ALLIAGE - DESAFIO 04\nREGISTRO RIGIDO DE CAPTURAS 3D\n\nReferencia: {reference_path.name}\nMovel: {moving_path.name}\nUnidade: {unit_note}\n\nDados: nuvens de pontos PLY sem faces. Todas as estatisticas direcionais usam NN Euclidiano e todos os pontos da fonte.\n\nRMS antes (M->R): {before_m2r['rms_native']:.6f}\nRMS depois (M->R): {after_m2r['rms_native']:.6f}\nRMS depois (R->M): {after_r2m['rms_native']:.6f}\nRMS bidirecional depois: {after_bidirectional['rms_bidirectional_native']:.6f}\nMediana depois (M->R): {after_m2r['median_native']:.6f}\nP95 depois (M->R): {after_m2r['p95_native']:.6f}\nP99 depois (M->R): {after_m2r['p99_native']:.6f}\nMaximo NN direcionado depois (M->R): {after_m2r['maximum_directed_nearest_neighbor_distance_native']:.6f}\nCobertura <= {coverage_threshold:.6f} unidade nativa: {after_m2r['coverage_within_threshold_percent']:.2f}%\n\nRegiao estavel: {registration_info['stable_region']['selected_points']} pontos ({registration_info['stable_region']['fraction']:.0%}), heuristica apos PCA e usada pelo ICP.\nRegiao candidata a alteracao: {candidate_metrics['points_evaluated']} pontos acima de P90 ({candidate_threshold:.6f}); heuristica nao anatomica.\n\n    Variabilidade do RMS sob perturbacoes (subconjuntos): media {variability_info['rms_mean_native']:.6f}; sd {variability_info['rms_std_native']:.6f}.\nTempo total: {timings['total_seconds']:.3f} s\n"""
     (output / "relatorio.txt").write_text(report, encoding="utf-8")
 
     print("\n" + "=" * 40)
@@ -145,9 +184,9 @@ def main() -> None:
     print(f"RMS ANTES (R->M): {before_r2m['rms_native']:.6f}\nRMS DEPOIS (R->M): {after_r2m['rms_native']:.6f}")
     print(f"RMS BIDIRECIONAL DEPOIS: {after_bidirectional['rms_bidirectional_native']:.6f}")
     print(f"MEDIANA (M->R): {after_m2r['median_native']:.6f}\nP95 (M->R): {after_m2r['p95_native']:.6f}\nP99 (M->R): {after_m2r['p99_native']:.6f}\nMAXIMO NN DIRECIONADO (M->R): {after_m2r['maximum_directed_nearest_neighbor_distance_native']:.6f}")
-    print(f"COBERTURA <= {coverage_threshold:.6f} unidade nativa: {after_m2r['coverage_within_threshold_percent']:.2f}%")
-    print(f"REGIAO ESTAVEL: {registration_info['stable_region']['selected_points']} pontos\nREGIAO CANDIDATA A ALTERACAO: {candidate_metrics['points_evaluated']} pontos (d > P90)")
-    print(f"VARIABILIDADE RMS (bootstrap): media = {uncertainty_info['rms_mean_native']:.6f}; sd = {uncertainty_info['rms_std_native']:.6f}")
+    print(f"COBERTURA DENTRO DO THRESHOLD (d <= {coverage_threshold:.6f}, {COVERAGE_SPACING_MULTIPLIER:g}x spacing): {after_m2r['coverage_within_threshold_percent']:.2f}%")
+    print(f"REGIAO ESTAVEL HEURISTICA: {stable_region['selected_points']} pontos ({stable_region['selected_percent_of_moving_points']:.2f}%)\nREGIAO CANDIDATA A ALTERACAO: {candidate_metrics['points_evaluated']} pontos (d > P90)")
+    print(f"VARIABILIDADE DO RMS SOB PERTURBACOES: media = {variability_info['rms_mean_native']:.6f}; sd = {variability_info['rms_std_native']:.6f}")
     print(f"TEMPO TOTAL: {timings['total_seconds']:.3f} s")
     print(f"TRANSFORMACAO: {output / 'transformacao_final.json'}")
     print(f"MALHA ALINHADA: {output / 'malha2_alinhada.ply'}")

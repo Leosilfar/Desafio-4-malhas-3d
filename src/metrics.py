@@ -33,6 +33,8 @@ def bidirectional_metrics(forward: dict, reverse: dict) -> dict:
     sum_squared = forward["sum_squared_distances"] + reverse["sum_squared_distances"]
     return {
         "definition": "sqrt((sum(d_moving_to_reference^2) + sum(d_reference_to_moving^2)) / (N_moving + N_reference))",
+        "N_M": int(forward["points_evaluated"]),
+        "N_R": int(reverse["points_evaluated"]),
         "points_evaluated": int(total_points),
         "sum_squared_distances": float(sum_squared),
         "rms_bidirectional_native": float(np.sqrt(sum_squared / total_points)),
@@ -48,6 +50,7 @@ def subset_metrics(distances: np.ndarray, label: str) -> dict:
     return {
         "definition": label,
         "points_evaluated": int(len(distances)),
+        "sum_squared_distances": float(np.sum(distances ** 2)),
         "rms_native": float(np.sqrt(np.mean(distances ** 2))),
         "mean_native": float(np.mean(distances)),
         "median_native": float(np.quantile(distances, 0.50)),

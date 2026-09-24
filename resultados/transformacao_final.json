@@ -52,5 +52,6 @@
   ],
   "rotation_determinant": 1.0000000000000002,
   "rotation_orthonormality_error": 1.6840278964136049e-15,
-  "translation_unit": "native PLY unit; physical unit undeclared"
+  "translation_unit": "native PLY unit; physical unit undeclared",
+  "application": "aligned_moving = apply(moving, T), equivalent to p_reference = T @ p_moving for column vectors"
 }
