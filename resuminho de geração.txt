@@ -1,0 +1,31 @@
+Implementação concluída e executada nos arquivos reais. A especificação foi usada como fonte principal: :codex-file-citation{path="C:\Users\Leo\Downloads\DESAFIO 4 malhas 3d\Desafio_04_Malhas_3D_1.docx.pdf" purpose="source"}
+
+Criei [run.py](</C:/Users/Leo/Downloads/DESAFIO 4 malhas 3d/run.py>), [README.md](</C:/Users/Leo/Downloads/DESAFIO 4 malhas 3d/README.md>), `src/`, `testes/`, `requirements.txt` e todos os artefatos em [resultados](</C:/Users/Leo/Downloads/DESAFIO 4 malhas 3d/resultados>).
+
+Os PLYs são nuvens de pontos com RGB e normais, sem faces: referência `79.037` vértices e móvel `84.887`. A unidade foi inferida como mm por plausibilidade geométrica, pois os arquivos não a declaram. Por isso, as métricas são distância por vértice móvel transformado → vértices de referência, não ponto-superfície.
+
+O método usa PCA com 24 hipóteses como alinhamento grosseiro, máscara estável automática dos 65% menores resíduos, e ICP point-to-plane multiescala com kernel robusto. A matriz rígida final segue `p_reference = T @ p_moving`.
+
+Resultados reais:
+- RMS: `0,552444 mm` antes → `0,348088 mm` depois
+- P95 depois: `1,014004 mm`
+- Mediana depois: `0,001228 mm`
+- Máximo: `2,041977 mm`
+- Fitness: `91,04%`
+- Tempo total: `39,234 s`; registro: `3,285 s`
+- Bootstrap: desvio RMS `0,000012 mm`, angular `0,000477 graus`
+- Robustez: sucesso com ruído, remoção artificial de 25% da região superior e perturbação inicial de 8 graus.
+
+Também validei a rigidez da transformação: `det(R)=1` e erro de ortonormalidade `2,9e-15`. O teste sintético passou.
+
+Comando executado neste ambiente:
+
+```powershell
+& 'C:\Users\Leo\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' .\run.py
+```
+
+Limitação principal: como não há faces nos PLYs, o mapa [mapa_distancia.png](</C:/Users/Leo/Downloads/DESAFIO 4 malhas 3d/resultados/mapa_distancia.png>) é por vértice, e não uma distância exata à superfície triangular.
+
+- Preparar um slide de pitch
+- Revisar o mapa de distancia
+- Adicionar mascara clinica

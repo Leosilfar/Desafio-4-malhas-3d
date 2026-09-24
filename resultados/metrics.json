@@ -1,0 +1,292 @@
+{
+  "unit": {
+    "reporting_unit": "native PLY unit",
+    "physical_unit_status": "not declared by input PLY"
+  },
+  "data_interpretation": "point clouds; no faces present in either PLY",
+  "spacing_estimate_native": 0.04816462967667004,
+  "inspection": {
+    "reference": {
+      "file": "malha 1.ply",
+      "vertices_header": 79037,
+      "vertices_valid": 79037,
+      "faces": 0,
+      "has_colors": true,
+      "has_normals": true,
+      "finite_vertices": 79037,
+      "invalid_vertices_removed": 0,
+      "unique_vertices": 79037,
+      "bbox_min": [
+        -5.249356269836426,
+        -7.649333477020264,
+        -8.459572792053223
+      ],
+      "bbox_max": [
+        5.2499284744262695,
+        7.649622917175293,
+        11.672281265258789
+      ],
+      "extent": [
+        10.499284744262695,
+        15.298956394195557,
+        20.13185405731201
+      ],
+      "centroid": [
+        1.3195501901265443,
+        0.2854054090881844,
+        6.584439706025919
+      ],
+      "is_triangular_mesh": false
+    },
+    "moving": {
+      "file": "malha 2.ply",
+      "vertices_header": 84887,
+      "vertices_valid": 84887,
+      "faces": 0,
+      "has_colors": true,
+      "has_normals": true,
+      "finite_vertices": 84887,
+      "invalid_vertices_removed": 0,
+      "unique_vertices": 84887,
+      "bbox_min": [
+        -5.249688625335693,
+        -7.649979114532471,
+        -9.003703117370605
+      ],
+      "bbox_max": [
+        5.24999475479126,
+        7.649888515472412,
+        11.541199684143066
+      ],
+      "extent": [
+        10.499683380126953,
+        15.299867630004883,
+        20.544902801513672
+      ],
+      "centroid": [
+        1.513803418020321,
+        0.2750872863447945,
+        6.140459165704999
+      ],
+      "is_triangular_mesh": false
+    }
+  },
+  "coverage_threshold_native": 0.3853170374133603,
+  "before": {
+    "moving_to_reference": {
+      "direction": "moving -> reference",
+      "distance_kind": "Euclidean nearest-neighbor, point cloud to point cloud",
+      "points_evaluated": 84887,
+      "sum_squared_distances": 25906.997665874384,
+      "rms_native": 0.5524436045816576,
+      "mean_native": 0.43974972096465176,
+      "median_native": 0.3657285773430356,
+      "p95_native": 1.085546522026876,
+      "p99_native": 1.4361201442634524,
+      "maximum_directed_nearest_neighbor_distance_native": 2.004362308913505,
+      "standard_deviation_native": 0.3343861826611349,
+      "coverage_threshold_native": 0.3853170374133603,
+      "coverage_within_threshold_percent": 52.01856585814082,
+      "coverage_count": 44157
+    },
+    "reference_to_moving": {
+      "direction": "reference -> moving",
+      "distance_kind": "Euclidean nearest-neighbor, point cloud to point cloud",
+      "points_evaluated": 79037,
+      "sum_squared_distances": 19656.32645622923,
+      "rms_native": 0.4986960800251122,
+      "mean_native": 0.4103685821092439,
+      "median_native": 0.35606122468647533,
+      "p95_native": 0.9305514827490784,
+      "p99_native": 1.2013876619484127,
+      "maximum_directed_nearest_neighbor_distance_native": 1.3626882004098668,
+      "standard_deviation_native": 0.28336444210603046,
+      "coverage_threshold_native": 0.3853170374133603,
+      "coverage_within_threshold_percent": 53.183951820033656,
+      "coverage_count": 42035
+    },
+    "bidirectional": {
+      "definition": "sqrt((sum(d_moving_to_reference^2) + sum(d_reference_to_moving^2)) / (N_moving + N_reference))",
+      "points_evaluated": 163924,
+      "sum_squared_distances": 45563.324122103615,
+      "rms_bidirectional_native": 0.5272133866058136,
+      "maximum_bidirectional_nearest_neighbor_distance_native": 2.004362308913505
+    }
+  },
+  "after": {
+    "moving_to_reference": {
+      "direction": "moving -> reference",
+      "distance_kind": "Euclidean nearest-neighbor, point cloud to point cloud",
+      "points_evaluated": 84887,
+      "sum_squared_distances": 10285.370835278707,
+      "rms_native": 0.3480882668683799,
+      "mean_native": 0.10610337114587433,
+      "median_native": 0.0012278218958395777,
+      "p95_native": 1.0140041648704918,
+      "p99_native": 1.6069123191124266,
+      "maximum_directed_nearest_neighbor_distance_native": 2.041976517438307,
+      "standard_deviation_native": 0.3315230250871172,
+      "coverage_threshold_native": 0.3853170374133603,
+      "coverage_within_threshold_percent": 91.03631887096965,
+      "coverage_count": 77278
+    },
+    "reference_to_moving": {
+      "direction": "reference -> moving",
+      "distance_kind": "Euclidean nearest-neighbor, point cloud to point cloud",
+      "points_evaluated": 79037,
+      "sum_squared_distances": 3668.5467967889917,
+      "rms_native": 0.21544271231800713,
+      "mean_native": 0.05101437297372482,
+      "median_native": 0.0011865287530565436,
+      "p95_native": 0.42339843485227935,
+      "p99_native": 1.1922496242689793,
+      "maximum_directed_nearest_neighbor_distance_native": 1.6471518057442565,
+      "standard_deviation_native": 0.20931578067846981,
+      "coverage_threshold_native": 0.3853170374133603,
+      "coverage_within_threshold_percent": 94.79737338208687,
+      "coverage_count": 74925
+    },
+    "bidirectional": {
+      "definition": "sqrt((sum(d_moving_to_reference^2) + sum(d_reference_to_moving^2)) / (N_moving + N_reference))",
+      "points_evaluated": 163924,
+      "sum_squared_distances": 13953.9176320677,
+      "rms_bidirectional_native": 0.2917607092495868,
+      "maximum_bidirectional_nearest_neighbor_distance_native": 2.041976517438307
+    }
+  },
+  "stable_region": {
+    "method": "automatic residual consensus after PCA coarse alignment",
+    "fraction": 0.65,
+    "threshold_native": 0.6632480943994314,
+    "selected_points": 55176,
+    "source": "moving points",
+    "selection_stage": "after coarse PCA, before ICP",
+    "used_for_icp": true,
+    "heuristic": "nearest-neighbor residual consensus; not anatomical or clinical"
+  },
+  "candidate_discrepancy_region": {
+    "definition": "moving vertices with post-registration moving -> reference residual strictly above P90; heuristic candidate discrepancy region",
+    "points_evaluated": 8489,
+    "rms_native": 1.0963405736378524,
+    "mean_native": 0.9975866357060661,
+    "median_native": 1.0140526136539296,
+    "p95_native": 1.7290621116513858,
+    "p99_native": 1.8923953839837926,
+    "maximum_directed_nearest_neighbor_distance_native": 2.041976517438307,
+    "standard_deviation_native": 0.4547346013503126,
+    "percentile": 0.9,
+    "threshold_native": 0.2815028184110289,
+    "approximately_percent_of_moving_points": 10.000353411005218,
+    "spatially_contiguous": false
+  },
+  "icp": {
+    "method": "multi-scale point-to-plane ICP",
+    "robust_kernel": "Cauchy",
+    "stable_mask_used": true,
+    "stages": [
+      {
+        "voxel_native": 0.5779755561200405,
+        "reference_points": 1675,
+        "moving_points": 1125,
+        "iterations": 50,
+        "point_to_plane_rms_native": 0.023703844216254318
+      },
+      {
+        "voxel_native": 0.28898777806002024,
+        "reference_points": 6056,
+        "moving_points": 4158,
+        "iterations": 4,
+        "point_to_plane_rms_native": 0.00715685882342859
+      },
+      {
+        "voxel_native": 0.14449388903001012,
+        "reference_points": 20960,
+        "moving_points": 14722,
+        "iterations": 3,
+        "point_to_plane_rms_native": 0.00282121684178597
+      }
+    ]
+  },
+  "registration": {
+    "coarse": {
+      "method": "PCA axes with 24 proper orientation hypotheses",
+      "candidates": 24,
+      "median_nn_score_native": 0.48071251850079244
+    },
+    "stable_region": {
+      "method": "automatic residual consensus after PCA coarse alignment",
+      "fraction": 0.65,
+      "threshold_native": 0.6632480943994314,
+      "selected_points": 55176
+    },
+    "icp_stages": [
+      {
+        "voxel_native": 0.5779755561200405,
+        "reference_points": 1675,
+        "moving_points": 1125,
+        "iterations": 50,
+        "point_to_plane_rms_native": 0.023703844216254318
+      },
+      {
+        "voxel_native": 0.28898777806002024,
+        "reference_points": 6056,
+        "moving_points": 4158,
+        "iterations": 4,
+        "point_to_plane_rms_native": 0.00715685882342859
+      },
+      {
+        "voxel_native": 0.14449388903001012,
+        "reference_points": 20960,
+        "moving_points": 14722,
+        "iterations": 3,
+        "point_to_plane_rms_native": 0.00282121684178597
+      }
+    ],
+    "registration_seconds": 2.6081371000036597
+  },
+  "uncertainty": {
+    "method": "6 bootstrap repeats with 75% point subsets; fixed seed 2030",
+    "rms_mean_native": 0.3481033507495073,
+    "rms_std_native": 1.249617440238914e-05,
+    "translation_std_native": [
+      1.879433876241369e-05,
+      6.988798088479027e-05,
+      3.276842061764492e-05
+    ],
+    "translation_std_norm_native": 7.944385710326552e-05,
+    "rotation_std_deg": 0.00047749560266761707
+  },
+  "robustness": {
+    "method": "controlled synthetic perturbations; originals untouched; fixed seed 40",
+    "tests": [
+      {
+        "test": "noise_0.5_spacing",
+        "success": true,
+        "rms_native": 0.34957416414119,
+        "coverage_within_threshold_percent": 91.02925065086527,
+        "registration_seconds": 2.7253993000049377
+      },
+      {
+        "test": "missing_highest_25pct_z",
+        "success": true,
+        "rms_native": 0.35135376225208487,
+        "coverage_within_threshold_percent": 91.02018377444435,
+        "registration_seconds": 4.0235165000049165
+      },
+      {
+        "test": "initialization_8deg_and_translation",
+        "success": true,
+        "rms_native": 0.34809186740678355,
+        "coverage_within_threshold_percent": 91.03631887096965,
+        "registration_seconds": 3.863456799997948
+      }
+    ]
+  },
+  "timings": {
+    "loading_seconds": 0.18168219999643043,
+    "preprocessing_seconds": 0.0351995000091847,
+    "coarse_and_icp_seconds": 2.6081371000036597,
+    "visualization_seconds": 2.2885188999935053,
+    "total_seconds": 27.50128090000362
+  }
+}
