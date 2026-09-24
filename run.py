@@ -75,6 +75,7 @@ def main() -> None:
     final_transform, registration_info, stable_mask = register(reference.points, moving.points, reference.normals, spacing)
     aligned = moving.transformed(final_transform)
     coverage_threshold = spacing * COVERAGE_SPACING_MULTIPLIER
+    metrics_started = time.perf_counter()
     before_m2r_distances, before_m2r = directional_metrics(moving.points, reference.points, coverage_threshold, "moving -> reference")
     before_r2m_distances, before_r2m = directional_metrics(reference.points, moving.points, coverage_threshold, "reference -> moving")
     after_m2r_distances, after_m2r = directional_metrics(aligned.points, reference.points, coverage_threshold, "moving -> reference")
@@ -107,6 +108,7 @@ def main() -> None:
         "selection_rule": "65% smallest coarse-PCA moving -> reference NN residuals (inclusive quantile threshold)",
         "final_residual_metrics": stable_final_metrics,
     }
+    metrics_seconds = time.perf_counter() - metrics_started
 
     visualization_started = time.perf_counter()
     overlay(reference.points, moving.points, output / "antes.png", "Antes do alinhamento")
@@ -117,13 +119,20 @@ def main() -> None:
     visualization_seconds = time.perf_counter() - visualization_started
     write_ply(output / "malha2_alinhada.ply", aligned)
     write_ply(output / "mapa_distancia_vertices.ply", aligned, colors)
+    visualization_seconds = time.perf_counter() - visualization_started
 
+    analysis_started = time.perf_counter()
     variability_info = uncertainty(reference.points, moving.points, reference.normals, spacing)
     robustness_info = robustness(reference.points, moving.points, reference.normals, spacing, final_transform)
+    analysis_seconds = time.perf_counter() - analysis_started
     timings = {
-        "loading_seconds": loading_seconds, "preprocessing_seconds": preprocessing_seconds,
-        "coarse_and_icp_seconds": registration_info["registration_seconds"],
-        "visualization_seconds": visualization_seconds, "total_seconds": time.perf_counter() - overall,
+        "inspection_seconds": loading_seconds,
+        "preprocessing_seconds": preprocessing_seconds,
+        "registration_seconds": registration_info["registration_seconds"],
+        "metrics_seconds": metrics_seconds,
+        "robustness_variability_analysis_seconds": analysis_seconds,
+        "visualization_seconds": visualization_seconds,
+        "total_seconds": time.perf_counter() - overall,
     }
     transform_payload = {
         "convention": "p_reference = T @ p_moving (homogeneous 4x4, column coordinates)",
@@ -159,7 +168,7 @@ def main() -> None:
             "unit": "native PLY unit",
             "colormap": "turbo",
             "normalization": "vmin=0; vmax=P95 of final moving -> reference distances; values above P95 are clipped for display only",
-            "threshold_native": coverage_threshold,
+            "coverage_threshold_native": coverage_threshold,
             "source": "same unfiltered final moving -> reference residual vector used by after metrics",
         },
         "icp": {"method": "multi-scale point-to-plane ICP", "robust_kernel": "Cauchy", "stable_mask_used": True, "stages": registration_info["icp_stages"]},
@@ -168,7 +177,7 @@ def main() -> None:
     transform_payload["application"] = "aligned_moving = apply(moving, T), equivalent to p_reference = T @ p_moving for column vectors"
     (output / "transformacao_final.json").write_text(json.dumps(rounded(transform_payload), indent=2), encoding="utf-8")
     (output / "metrics.json").write_text(json.dumps(rounded(metrics), indent=2), encoding="utf-8")
-    report = f"""HACKATHON ALLIAGE - DESAFIO 04\nREGISTRO RIGIDO DE CAPTURAS 3D\n\nReferencia: {reference_path.name}\nMovel: {moving_path.name}\nUnidade: {unit_note}\n\nDados: nuvens de pontos PLY sem faces. Todas as estatisticas direcionais usam NN Euclidiano e todos os pontos da fonte.\n\nRMS antes (M->R): {before_m2r['rms_native']:.6f}\nRMS depois (M->R): {after_m2r['rms_native']:.6f}\nRMS depois (R->M): {after_r2m['rms_native']:.6f}\nRMS bidirecional depois: {after_bidirectional['rms_bidirectional_native']:.6f}\nMediana depois (M->R): {after_m2r['median_native']:.6f}\nP95 depois (M->R): {after_m2r['p95_native']:.6f}\nP99 depois (M->R): {after_m2r['p99_native']:.6f}\nMaximo NN direcionado depois (M->R): {after_m2r['maximum_directed_nearest_neighbor_distance_native']:.6f}\nCobertura <= {coverage_threshold:.6f} unidade nativa: {after_m2r['coverage_within_threshold_percent']:.2f}%\n\nRegiao estavel: {registration_info['stable_region']['selected_points']} pontos ({registration_info['stable_region']['fraction']:.0%}), heuristica apos PCA e usada pelo ICP.\nRegiao candidata a alteracao: {candidate_metrics['points_evaluated']} pontos acima de P90 ({candidate_threshold:.6f}); heuristica nao anatomica.\n\n    Variabilidade do RMS sob perturbacoes (subconjuntos): media {variability_info['rms_mean_native']:.6f}; sd {variability_info['rms_std_native']:.6f}.\nTempo total: {timings['total_seconds']:.3f} s\n"""
+    report = f"""HACKATHON ALLIAGE - DESAFIO 04\nREGISTRO RIGIDO DE CAPTURAS 3D\n\nReferencia: {reference_path.name}\nMovel: {moving_path.name}\nUnidade: {unit_note}\n\nDados: nuvens de pontos PLY sem faces. Todas as estatisticas direcionais usam NN Euclidiano e todos os pontos da fonte.\n\nRMS antes (M->R): {before_m2r['rms_native']:.6f}\nRMS depois (M->R): {after_m2r['rms_native']:.6f}\nRMS depois (R->M): {after_r2m['rms_native']:.6f}\nRMS bidirecional depois: {after_bidirectional['rms_bidirectional_native']:.6f}\nMediana depois (M->R): {after_m2r['median_native']:.6f}\nP95 depois (M->R): {after_m2r['p95_native']:.6f}\nP99 depois (M->R): {after_m2r['p99_native']:.6f}\n    Maximo NN direcionado depois (M->R): {after_m2r['maximum_directed_nearest_neighbor_distance_native']:.6f}\nCobertura de correspondencia dentro de 8x o espacamento estimado: {after_m2r['coverage_within_threshold_percent']:.2f}%\n\nRegiao estavel heuristica apos o registro (residuo de registro na regiao usada pelo ICP):\n  pontos={stable_final_metrics['points_evaluated']}; RMS={stable_final_metrics['rms_native']:.6f}; media={stable_final_metrics['mean_native']:.6f}; mediana={stable_final_metrics['median_native']:.6f}; P95={stable_final_metrics['p95_native']:.6f}; P99={stable_final_metrics['p99_native']:.6f}; maximo={stable_final_metrics['maximum_directed_nearest_neighbor_distance_native']:.6f}; SD={stable_final_metrics['standard_deviation_native']:.6f}\nRegiao candidata a alteracao (discrepancia geometrica heuristica, d > P90):\n  threshold={candidate_threshold:.6f}; pontos={candidate_metrics['points_evaluated']}; percentual={candidate_metrics['percent_of_moving_points']:.2f}%; RMS={candidate_metrics['rms_native']:.6f}; media={candidate_metrics['mean_native']:.6f}; mediana={candidate_metrics['median_native']:.6f}; P95={candidate_metrics['p95_native']:.6f}; P99={candidate_metrics['p99_native']:.6f}; maximo={candidate_metrics['maximum_directed_nearest_neighbor_distance_native']:.6f}; SD={candidate_metrics['standard_deviation_native']:.6f}\n\nVariabilidade do RMS sob perturbacoes (subconjuntos): repeticoes={variability_info['repetitions']}; fracao={variability_info['fraction_of_points_used']:.2f}; media={variability_info['rms_mean_native']:.6f}; SD={variability_info['rms_std_native']:.6f}.\nTempos (s): inspecao={timings['inspection_seconds']:.3f}; preprocessamento={timings['preprocessing_seconds']:.3f}; registro={timings['registration_seconds']:.3f}; metricas={timings['metrics_seconds']:.3f}; robustez+variabilidade={timings['robustness_variability_analysis_seconds']:.3f}; visualizacao={timings['visualization_seconds']:.3f}; total={timings['total_seconds']:.3f}\n"""
     (output / "relatorio.txt").write_text(report, encoding="utf-8")
 
     print("\n" + "=" * 40)
@@ -184,10 +193,11 @@ def main() -> None:
     print(f"RMS ANTES (R->M): {before_r2m['rms_native']:.6f}\nRMS DEPOIS (R->M): {after_r2m['rms_native']:.6f}")
     print(f"RMS BIDIRECIONAL DEPOIS: {after_bidirectional['rms_bidirectional_native']:.6f}")
     print(f"MEDIANA (M->R): {after_m2r['median_native']:.6f}\nP95 (M->R): {after_m2r['p95_native']:.6f}\nP99 (M->R): {after_m2r['p99_native']:.6f}\nMAXIMO NN DIRECIONADO (M->R): {after_m2r['maximum_directed_nearest_neighbor_distance_native']:.6f}")
-    print(f"COBERTURA DENTRO DO THRESHOLD (d <= {coverage_threshold:.6f}, {COVERAGE_SPACING_MULTIPLIER:g}x spacing): {after_m2r['coverage_within_threshold_percent']:.2f}%")
-    print(f"REGIAO ESTAVEL HEURISTICA: {stable_region['selected_points']} pontos ({stable_region['selected_percent_of_moving_points']:.2f}%)\nREGIAO CANDIDATA A ALTERACAO: {candidate_metrics['points_evaluated']} pontos (d > P90)")
-    print(f"VARIABILIDADE DO RMS SOB PERTURBACOES: media = {variability_info['rms_mean_native']:.6f}; sd = {variability_info['rms_std_native']:.6f}")
-    print(f"TEMPO TOTAL: {timings['total_seconds']:.3f} s")
+    print(f"COBERTURA DE CORRESPONDENCIA DENTRO DE 8x O ESPACAMENTO ESTIMADO: {after_m2r['coverage_within_threshold_percent']:.2f}% (d <= {coverage_threshold:.6f})")
+    print(f"REGIAO ESTAVEL HEURISTICA APOS O REGISTRO: pontos={stable_final_metrics['points_evaluated']} ({stable_region['selected_percent_of_moving_points']:.2f}%); RMS={stable_final_metrics['rms_native']:.6f}; media={stable_final_metrics['mean_native']:.6f}; mediana={stable_final_metrics['median_native']:.6f}; P95={stable_final_metrics['p95_native']:.6f}; P99={stable_final_metrics['p99_native']:.6f}; maximo={stable_final_metrics['maximum_directed_nearest_neighbor_distance_native']:.6f}; SD={stable_final_metrics['standard_deviation_native']:.6f}")
+    print(f"REGIAO CANDIDATA A ALTERACAO (DISCREPANCIA GEOMETRICA HEURISTICA): threshold P90={candidate_threshold:.6f}; pontos={candidate_metrics['points_evaluated']}; percentual={candidate_metrics['percent_of_moving_points']:.2f}%; RMS={candidate_metrics['rms_native']:.6f}; media={candidate_metrics['mean_native']:.6f}; mediana={candidate_metrics['median_native']:.6f}; P95={candidate_metrics['p95_native']:.6f}; P99={candidate_metrics['p99_native']:.6f}; maximo={candidate_metrics['maximum_directed_nearest_neighbor_distance_native']:.6f}; SD={candidate_metrics['standard_deviation_native']:.6f}")
+    print(f"VARIABILIDADE DO RMS SOB PERTURBACOES: repeticoes={variability_info['repetitions']}; fracao={variability_info['fraction_of_points_used']:.2f}; media={variability_info['rms_mean_native']:.6f}; SD={variability_info['rms_std_native']:.6f}")
+    print(f"TEMPOS (s): inspecao={timings['inspection_seconds']:.3f}; preprocessamento={timings['preprocessing_seconds']:.3f}; registro={timings['registration_seconds']:.3f}; metricas={timings['metrics_seconds']:.3f}; robustez+variabilidade={timings['robustness_variability_analysis_seconds']:.3f}; visualizacao={timings['visualization_seconds']:.3f}; total={timings['total_seconds']:.3f}")
     print(f"TRANSFORMACAO: {output / 'transformacao_final.json'}")
     print(f"MALHA ALINHADA: {output / 'malha2_alinhada.ply'}")
     print(f"METRICAS: {output / 'metrics.json'}")

@@ -11,7 +11,7 @@ if sys.version_info[:2] == (3, 12):
 sys.path.insert(0, str(ROOT))
 
 from src.registration import rigid_from_correspondences, apply
-from src.metrics import bidirectional_metrics, directional_metrics
+from src.metrics import bidirectional_metrics, directional_metrics, subset_metrics
 
 
 class RegistrationTests(unittest.TestCase):
@@ -60,6 +60,14 @@ class RegistrationTests(unittest.TestCase):
         _, metric = directional_metrics(source, target, 1., "moving -> reference")
         self.assertEqual(metric["maximum_directed_nearest_neighbor_distance_native"], 100.)
         self.assertEqual(metric["points_evaluated"], 2)
+
+    def test_subset_metrics_reports_all_unfiltered_statistics(self):
+        distances = np.array([1., 2., 10.])
+        metric = subset_metrics(distances, "synthetic subset")
+        self.assertEqual(metric["points_evaluated"], 3)
+        self.assertAlmostEqual(metric["rms_native"], np.sqrt(35), places=12)
+        self.assertEqual(metric["maximum_directed_nearest_neighbor_distance_native"], 10.)
+        self.assertAlmostEqual(metric["standard_deviation_native"], np.std(distances), places=12)
 
 
 if __name__ == "__main__":

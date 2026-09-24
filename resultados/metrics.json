@@ -218,7 +218,7 @@
     "unit": "native PLY unit",
     "colormap": "turbo",
     "normalization": "vmin=0; vmax=P95 of final moving -> reference distances; values above P95 are clipped for display only",
-    "threshold_native": 0.3853170374133603,
+    "coverage_threshold_native": 0.3853170374133603,
     "source": "same unfiltered final moving -> reference residual vector used by after metrics"
   },
   "icp": {
@@ -284,7 +284,7 @@
         "point_to_plane_rms_native": 0.00282121684178597
       }
     ],
-    "registration_seconds": 7.30532790000143
+    "registration_seconds": 6.012765999999829
   },
   "variability": {
     "label": "variability of RMS under point-subset perturbations",
@@ -327,7 +327,7 @@
         "potentially_unreliable": false,
         "rms_native": 0.34957416414119,
         "coverage_within_threshold_percent": 91.02925065086527,
-        "registration_seconds": 8.052330599995912
+        "registration_seconds": 2.768482999992557
       },
       {
         "test": "missing_highest_25pct_z",
@@ -335,7 +335,7 @@
         "potentially_unreliable": false,
         "rms_native": 0.35135376225208487,
         "coverage_within_threshold_percent": 91.02018377444435,
-        "registration_seconds": 7.986485899993568
+        "registration_seconds": 2.330295000007027
       },
       {
         "test": "missing_highest_50pct_z",
@@ -343,7 +343,7 @@
         "potentially_unreliable": true,
         "rms_native": 1.3446981151353208,
         "coverage_within_threshold_percent": 30.868909622090285,
-        "registration_seconds": 9.460487799995462
+        "registration_seconds": 2.8866688999987673
       },
       {
         "test": "initialization_8deg_and_translation",
@@ -351,15 +351,17 @@
         "potentially_unreliable": false,
         "rms_native": 0.34809186740678355,
         "coverage_within_threshold_percent": 91.03631887096965,
-        "registration_seconds": 3.2837273000041023
+        "registration_seconds": 2.5311651999945752
       }
     ]
   },
   "timings": {
-    "loading_seconds": 0.4585116000089329,
-    "preprocessing_seconds": 0.07975800000713207,
-    "coarse_and_icp_seconds": 7.30532790000143,
-    "visualization_seconds": 12.833651499997359,
-    "total_seconds": 88.8289766000089
+    "inspection_seconds": 0.14327770000090823,
+    "preprocessing_seconds": 0.046377000006032176,
+    "registration_seconds": 6.012765999999829,
+    "metrics_seconds": 0.7641153000004124,
+    "robustness_variability_analysis_seconds": 27.730546199993114,
+    "visualization_seconds": 4.478367400006391,
+    "total_seconds": 39.186092799995095
   }
 }

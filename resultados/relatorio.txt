@@ -14,11 +14,13 @@ RMS bidirecional depois: 0.291761
 Mediana depois (M->R): 0.001228
 P95 depois (M->R): 1.014004
 P99 depois (M->R): 1.606912
-Maximo NN direcionado depois (M->R): 2.041977
-Cobertura <= 0.385317 unidade nativa: 91.04%
+    Maximo NN direcionado depois (M->R): 2.041977
+Cobertura de correspondencia dentro de 8x o espacamento estimado: 91.04%
 
-Regiao estavel: 55176 pontos (65%), heuristica apos PCA e usada pelo ICP.
-Regiao candidata a alteracao: 8489 pontos acima de P90 (0.281503); heuristica nao anatomica.
+Regiao estavel heuristica apos o registro (residuo de registro na regiao usada pelo ICP):
+  pontos=55176; RMS=0.299985; media=0.081218; mediana=0.001292; P95=0.790146; P99=1.459635; maximo=1.867379; SD=0.288781
+Regiao candidata a alteracao (discrepancia geometrica heuristica, d > P90):
+  threshold=0.281503; pontos=8489; percentual=10.00%; RMS=1.096341; media=0.997587; mediana=1.014053; P95=1.729062; P99=1.892395; maximo=2.041977; SD=0.454735
 
-    Variabilidade do RMS sob perturbacoes (subconjuntos): media 0.348100; sd 0.000010.
-Tempo total: 88.829 s
+Variabilidade do RMS sob perturbacoes (subconjuntos): repeticoes=6; fracao=0.75; media=0.348100; SD=0.000010.
+Tempos (s): inspecao=0.143; preprocessamento=0.046; registro=6.013; metricas=0.764; robustez+variabilidade=27.731; visualizacao=4.478; total=39.186
