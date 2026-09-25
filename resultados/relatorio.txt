@@ -23,4 +23,4 @@ Regiao candidata a alteracao (discrepancia geometrica heuristica, d > P90):
   threshold=0.281503; pontos=8489; percentual=10.00%; RMS=1.096341; media=0.997587; mediana=1.014053; P95=1.729062; P99=1.892395; maximo=2.041977; SD=0.454735
 
 Variabilidade do RMS sob perturbacoes (subconjuntos): repeticoes=6; fracao=0.75; media=0.348100; SD=0.000010.
-Tempos (s): inspecao=0.143; preprocessamento=0.046; registro=6.013; metricas=0.764; robustez+variabilidade=27.731; visualizacao=4.478; total=39.186
+Tempos (s): inspecao=0.194; preprocessamento=0.038; registro=2.050; metricas=0.364; robustez+variabilidade=17.903; visualizacao=3.157; total=23.711

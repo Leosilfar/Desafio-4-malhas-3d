@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import argparse
 import os
 from pathlib import Path
 import sys
@@ -46,8 +47,13 @@ def inspect_line(label: str, info: dict) -> str:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Registra duas nuvens de pontos PLY.")
+    parser.add_argument("--referencia", type=Path, default=ROOT / "malha 1.ply")
+    parser.add_argument("--movel", type=Path, default=ROOT / "malha 2.ply")
+    parser.add_argument("--saida", type=Path, default=ROOT / "resultados")
+    args = parser.parse_args()
     overall = time.perf_counter()
-    output = ROOT / "resultados"
+    output = args.saida.resolve()
     output.mkdir(exist_ok=True)
     for name in (
         "antes.png", "depois.png", "mapa_distancia.png", "regiao_candidata.png", "malha2_alinhada.ply",
@@ -55,7 +61,7 @@ def main() -> None:
         "transformacao_final.json",
     ):
         (output / name).unlink(missing_ok=True)
-    reference_path, moving_path = ROOT / "malha 1.ply", ROOT / "malha 2.ply"
+    reference_path, moving_path = args.referencia.resolve(), args.movel.resolve()
     if not reference_path.exists() or not moving_path.exists():
         raise FileNotFoundError("Esperados: malha 1.ply e malha 2.ply na pasta do projeto.")
 

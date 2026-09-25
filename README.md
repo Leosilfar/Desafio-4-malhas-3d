@@ -102,6 +102,24 @@ Os tempos em `metrics.json` são separados em inspeção, preprocessamento, regi
 
 ## Execucao
 
+Para abrir a interface gráfica e escolher os dois arquivos PLY:
+
+```powershell
+python interface.py
+```
+
+No Linux, também é possível iniciar pelo arquivo executável `./iniciar_interface.sh`.
+
+A interface exibe um resumo e o mapa point-wise; os arquivos completos são salvos em `resultados/`. Ela aceita nuvens PLY compatíveis com o esquema XYZ/RGB/normais usado neste projeto. Imagens 2D comuns não são entradas para este algoritmo.
+
+Também é possível informar os arquivos diretamente:
+
+```powershell
+python run.py --referencia "caminho/referencia.ply" --movel "caminho/movel.ply" --saida "resultados"
+```
+
+Sem argumentos, o comando abaixo continua usando `malha 1.ply` e `malha 2.ply`:
+
 ```powershell
 python -m pip install -r requirements.txt
 python run.py
